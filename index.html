@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ruleta CESFAM Labranza — Acreditación Atención Abierta</title>
+
+<!-- (header comments omitted for brevity in this code block) -->
+
+<style>
+  :root {
+    --bg: #f7f9fb;
+    --panel: #ffffff;
+    --text: #0f172a;
+    --muted: #475569;
+    --primary: #0ea5e9;
+    --primary-dark: #0284c7;
+    --accent: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --border: #e2e8f0;
+    --focus: #3b82f6;
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  }
+  [data-theme="dark"] {
+    --bg: #0b1220;
+    --panel: #0f172a;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --primary: #38bdf8;
+    --primary-dark: #0ea5e9;
+    --accent: #34d399;
+    --danger: #f87171;
+    --warning: #fbbf24;
+    --border: #1f2937;
+    --focus: #60a5fa;
+    --shadow: 0 6px 20px rgba(2, 6, 23, 0.35);
+  }
+
+  html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; background: var(--bg); color: var(--text); }
+  *, *::before, *::after { box-sizing: border-box; }
+  :focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  header { background: var(--panel); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+  .header-inner { max-width: 1200px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .logo { width: 40px; height: 40px; flex: 0 0 auto; }
+  .titles h1 { font-size: 20px; margin: 0; }
+  .titles p { font-size: 13px; margin: 0; color: var(--muted); }
+
+  .topbar { max-width: 1200px; margin: 12px auto 0; padding: 8px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .btn { appearance: none; border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 10px; padding: 12px 16px; min-height: 44px; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; letter-spacing: .2px; }
+  .btn.primary { background: var(--primary); color: #fff; border-color: transparent; }
+  .btn.primary:hover { background: var(--primary-dark); }
+  .btn.accent { background: var(--accent); color: #052e1a; border-color: transparent; }
+  .btn.success { background: #22c55e; color: #052e1a; border-color: transparent; }
+  .btn.warn { background: #f59e0b; color: #3b1d00; border-color: transparent; }
+  .btn.danger { background: var(--danger); color: #fff; border-color: transparent; }
+  .btn.icon { display: inline-flex; align-items: center; gap: 8px; }
+  .btn[disabled] { opacity: .55; cursor: not-allowed; }
+
+  main { max-width: 1200px; margin: 8px auto; padding: 16px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 16px; }
+  .center-area { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .wheel-wrap { display: grid; place-items: center; padding: 8px; }
+  .wheel-canvas { width: 100%; max-width: 520px; aspect-ratio: 1 / 1; background: radial-gradient(ellipse at center, rgba(0,0,0,0.03), transparent 70%); border-radius: 50%; }
+  .result { text-align: center; font-size: 18px; line-height: 1.4; margin-top: 8px; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+  .result .meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  .history-wrap { overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 920px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { background: rgba(2,6,23,0.04); font-size: 13px; color: var(--muted); }
+  [data-theme="dark"] th { background: rgba(255,255,255,0.04); }
+
+  .config-toggle { margin-left: auto; }
+  .drawer { position: fixed; top: 0; right: 0; width: min(92vw, 420px); height: 100vh; background: var(--panel); border-left: 1px solid var(--border); box-shadow: var(--shadow); transform: translateX(100%); transition: transform .25s ease; z-index: 50; }
+  .drawer.open { transform: translateX(0); }
+  .drawer header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .drawer h2 { margin: 0; font-size: 18px; }
+  .drawer .content { padding: 16px; display: grid; gap: 16px; height: calc(100vh - 62px); overflow: auto; }
+  .field { display: grid; gap: 6px; }
+  .field label { font-size: 14px; }
+  .field input[type="text"], .field select, .field textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .section { border: 1px dashed var(--border); border-radius: 10px; padding: 12px; }
+  .section h3 { margin: 0 0 8px 0; font-size: 15px; color: var(--muted); }
+
+  .player-panel { display: grid; gap: 8px; }
+  .pointer { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 18px solid var(--warning); margin: 4px auto 0; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+  .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; display: none; }
+  .confetti.show { display: block; }
+
+  @media (min-width: 900px) { .center-area { grid-template-columns: 1fr 1fr; align-items: center; } }
+</style>
+</head>
+<body>
+  <header role="banner" aria-label="Encabezado">
+    <div class="header-inner" aria-hidden="false">
+      <svg class="logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#10b981" />
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="30" fill="url(#g1)" opacity="0.2" />
+        <path d="M32 10 A22 22 0 1 1 31.99 10" fill="none" stroke="#38bdf8" stroke-width="6" />
+        <path d="M32 32 L32 12" stroke="#10b981" stroke-width="6" stroke-linecap="round" />
+        <circle cx="32" cy="32" r="6" fill="#0ea5e9" />
+      </svg>
+      <div class="titles">
+        <h1>Ruleta CESFAM Labranza</h1>
+        <p>Acreditación – Atención Abierta</p>
+      </div>
+    </div>
+    <div class="topbar" role="navigation" aria-label="Barra de acciones">
+      <div class="row">
+        <button id="btnNewPlayer" class="btn icon" aria-label="Nuevo jugador"><span aria-hidden="true">👤</span> Nuevo jugador</button>
+        <button id="btnEndPlayer" class="btn" aria-label="Finalizar jugador" disabled>Finalizar jugador</button>
+      </div>
+      <button id="btnConfig" class="btn icon config-toggle" aria-controls="drawer" aria-expanded="false" aria-label="Abrir configuraciones"><span aria-hidden="true">⚙️</span> Configuraciones</button>
+    </div>
+  </header>
+
+  <main role="main">
+    <section class="panel center-area" aria-label="Sección principal">
+      <div class="wheel-wrap">
+        <div class="pointer" aria-hidden="true"></div>
+        <canvas id="wheel" class="wheel-canvas" width="520" height="520" aria-label="Ruleta"></canvas>
+        <div class="controls" style="margin-top:10px;">
+          <button id="btnSpin" class="btn primary" aria-label="Girar la ruleta">🎡 Girar</button>
+        </div>
+        <div id="resultBox" class="result" role="status" aria-live="polite">
+          <div class="meta" id="activeCategory">Categoría: Todas</div>
+          <div class="meta" id="resultStatus"></div>
+          <div id="resultText">Usa el botón “Girar” para sortear una pregunta.</div>
+          <div class="controls" style="margin-top:8px;">
+            <button id="btnMarkCorrect" class="btn success" aria-label="Marcar respuesta correcta" disabled>✅ Correcta</button>
+            <button id="btnMarkIncorrect" class="btn warn" aria-label="Marcar respuesta incorrecta" disabled>❌ Incorrecta</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel player-panel" aria-label="Gestión de jugador">
+        <h2 style="margin:0 0 6px 0; font-size:18px;">Jugador activo</h2>
+        <div id="playerInfo" style="font-size:14px; color:var(--muted);">Ninguno</div>
+        <hr style="border:0; border-top:1px solid var(--border);" />
+        <form id="playerForm" aria-label="Formulario de nuevo jugador">
+          <div class="field">
+            <label for="inpNombre">Nombre</label>
+            <input type="text" id="inpNombre" name="nombre" placeholder="Nombre y Apellido" minlength="2" required />
+          </div>
+          <div class="field">
+            <label for="inpEstamento">Estamento</label>
+            <input type="text" id="inpEstamento" name="estamento" placeholder="Ej: TENS, Médico, Químico Farmacéutico" required />
+          </div>
+          <div class="field">
+            <label for="inpSector">Sector / Unidad</label>
+            <input type="text" id="inpSector" name="sector" placeholder="Ej: Farmacia, Vacunatorio, SOME" required />
+          </div>
+          <div class="row">
+            <button type="submit" class="btn accent" id="btnCreatePlayer">Crear jugador</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel history-wrap" aria-label="Historial">
+      <h2 style="margin:0 0 8px 0; font-size:18px;">Historial</h2>
+      <div class="table-scroll" tabindex="0">
+        <table aria-describedby="histHelp">
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Categoría</th>
+              <th>Codificación</th>
+              <th>Pregunta</th>
+              <th>Nombre</th>
+              <th>Estamento</th>
+              <th>Sector</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <p id="histHelp" style="font-size:12px; color:var(--muted); margin-top:8px;">Los registros se guardan localmente y se restauran al recargar.</p>
+    </section>
+  </main>
+
+  <aside id="drawer" class="drawer" role="dialog" aria-modal="false" aria-label="Panel de configuraciones" tabindex="-1">
+    <header>
+      <h2>Configuraciones</h2>
+      <button id="btnCloseDrawer" class="btn" aria-label="Cerrar configuraciones">Cerrar</button>
+    </header>
+    <div class="content" id="drawerContent">
+      <section class="section" aria-label="Preferencias generales">
+        <h3>Preferencias</h3>
+        <div class="field">
+          <label for="selCategoria">Categoría</label>
+          <select id="selCategoria" aria-label="Seleccionar categoría"></select>
+        </div>
+        <div class="row" role="group" aria-label="Repetición de preguntas">
+          <button id="btnNoRepeat" class="btn" aria-pressed="false">No permitir repeticiones</button>
+          <button id="btnAllowRepeat" class="btn" aria-pressed="false">Permitir repeticiones</button>
+        </div>
+        <div class="row" role="group" aria-label="Tema visual">
+          <button id="btnLight" class="btn" aria-pressed="false">Modo claro</button>
+          <button id="btnDark" class="btn" aria-pressed="false">Modo oscuro</button>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Banco de preguntas">
+        <h3>Banco de preguntas</h3>
+        <div class="field">
+          <label for="txtNuevaPregunta">Agregar pregunta (mín. 10 caracteres)</label>
+          <textarea id="txtNuevaPregunta" rows="3" placeholder="Escribe aquí la nueva pregunta..." minlength="10"></textarea>
+        </div>
+        <div class="field">
+          <label for="selCategoriaNueva">Categoría para la nueva pregunta</label>
+          <select id="selCategoriaNueva"></select>
+        </div>
+        <div class="field">
+          <label for="inpCodificacionNueva">Codificación (ej.: REG 1.1)</label>
+          <input id="inpCodificacionNueva" type="text" placeholder="Ej.: AOC 1.1" />
+        </div>
+        <div class="row">
+          <button id="btnAgregarPregunta" class="btn accent">Agregar al banco</button>
+        </div>
+        <hr style="border:0; border-top:1px solid var(--border);" />
+        <div class="row">
+          <input id="fileImport" type="file" accept="application/json,.json" style="display:none" />
+          <button id="btnImport" class="btn">Importar JSON</button>
+          <select id="selImportMode" aria-label="Modo de importación">
+            <option value="replace">Reemplazar banco</option>
+            <option value="merge">Agregar al banco actual</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Historial y exportación">
+        <h3>Historial</h3>
+        <div class="row">
+          <button id="btnExportCSV" class="btn">Exportar CSV</button>
+          <button id="btnExportTXT" class="btn">Exportar TXT</button>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Sistema">
+        <h3>Sistema</h3>
+        <div class="row">
+          <button id="btnReset" class="btn danger">Reset completo</button>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <canvas id="confetti" class="confetti" width="1920" height="1080" aria-hidden="true"></canvas>
+
+  <script id="embedded-bank" type="application/json">{
+    "categorias": ["GENERAL", "MÉDICOS(AS)", "CLÍNICOS", "DENTAL"],
+    "preguntas": [
+      {"texto":"¿Cómo reconoce una situación de emergencia con riesgo vital?","categoria":"GENERAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 1)","categoria":"GENERAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 2)","categoria":"GENERAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Cuál es el equipo de respuesta?","categoria":"GENERAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hace si tiene un accidente relacionado con sangre o fluidos corporales?","categoria":"GENERAL","codificacion":"RH 4.2"},
+      {"texto":"¿Qué hacer en caso de tener un accidente cortopunzante?","categoria":"GENERAL","codificacion":"RH 4.2"},
+      {"texto":"¿Cuáles son los pasos a realizar una vez se conoce la fuente (usuario) del accidente cortopunzante?","categoria":"GENERAL","codificacion":"RH 4.2"},
+      {"texto":"¿Para qué sirve la \"hoja DIAT\"?","categoria":"GENERAL","codificacion":"RH 4.2"},
+      {"texto":"¿Cómo se realiza la notificación ante un Evento Adverso?","categoria":"GENERAL","codificacion":"GCL 2.2"},
+      {"texto":"¿Quiénes pueden notificar Eventos Adversos? ¿Es voluntario?","categoria":"GENERAL","codificacion":"GCL 2.2"},
+      {"texto":"¿Qué hacer en caso de que un usuario desee formular una solicitud ciudadana?","categoria":"GENERAL","codificacion":"DP 1.2"},
+      {"texto":"¿Dónde están los formularios OIRS? Indicar el más cercano.","categoria":"GENERAL","codificacion":"DP 1.2"},
+
+      {"texto":"¿Cómo reconoce una situación de emergencia con riesgo vital?","categoria":"MÉDICOS(AS)","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 1)","categoria":"MÉDICOS(AS)","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 2)","categoria":"MÉDICOS(AS)","codificacion":"AOC 1.1"},
+      {"texto":"¿Cuál es el equipo de respuesta?","categoria":"MÉDICOS(AS)","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hace si tiene un accidente relacionado con sangre o fluidos corporales?","categoria":"MÉDICOS(AS)","codificacion":"RH 4.2"},
+      {"texto":"¿Qué hacer en caso de tener un accidente cortopunzante?","categoria":"MÉDICOS(AS)","codificacion":"RH 4.2"},
+      {"texto":"¿Cuáles son los pasos a realizar una vez se conoce la fuente (usuario) del accidente cortopunzante?","categoria":"MÉDICOS(AS)","codificacion":"RH 4.2"},
+      {"texto":"¿Para qué sirve la \"hoja DIAT\"?","categoria":"MÉDICOS(AS)","codificacion":"RH 4.2"},
+      {"texto":"¿Cómo se realiza la notificación ante un Evento Adverso?","categoria":"MÉDICOS(AS)","codificacion":"GCL 2.2"},
+      {"texto":"¿Quiénes pueden notificar Eventos Adversos? ¿Es voluntario?","categoria":"MÉDICOS(AS)","codificacion":"GCL 2.2"},
+      {"texto":"¿Qué hacer en caso de que un usuario desee formular una solicitud ciudadana?","categoria":"MÉDICOS(AS)","codificacion":"DP 1.2"},
+      {"texto":"¿Dónde están los formularios OIRS? Indicar el más cercano.","categoria":"MÉDICOS(AS)","codificacion":"DP 1.2"},
+      {"texto":"¿En el CESFAM se realiza investigación en seres humanos?","categoria":"MÉDICOS(AS)","codificacion":"DP 3.1"},
+      {"texto":"¿Cuál es el tipo de ficha clínica que hay en el CESFAM?","categoria":"MÉDICOS(AS)","codificacion":"REG 1.1"},
+      {"texto":"¿Cuál es el código único de identificación de los usuarios para las distintas partes de la ficha clínica?","categoria":"MÉDICOS(AS)","codificacion":"REG 1.1"},
+      {"texto":"¿Cuáles son los “soportes” que conforman la ficha clínica? ¿Cómo accedo?","categoria":"MÉDICOS(AS)","codificacion":"REG 1.1"},
+      {"texto":"¿Qué hacer si un usuario no tiene RUN?","categoria":"MÉDICOS(AS)","codificacion":"REG 1.1"},
+      {"texto":"¿Cómo se solicita una ficha de papel?","categoria":"MÉDICOS(AS)","codificacion":"REG 1.1"},
+
+      {"texto":"¿Cómo reconoce una situación de emergencia con riesgo vital?","categoria":"CLÍNICOS","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 1)","categoria":"CLÍNICOS","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 2)","categoria":"CLÍNICOS","codificacion":"AOC 1.1"},
+      {"texto":"¿Cuál es el equipo de respuesta?","categoria":"CLÍNICOS","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hace si tiene un accidente relacionado con sangre o fluidos corporales?","categoria":"CLÍNICOS","codificacion":"RH 4.2"},
+      {"texto":"¿Qué hacer en caso de tener un accidente cortopunzante?","categoria":"CLÍNICOS","codificacion":"RH 4.2"},
+      {"texto":"¿Cuáles son los pasos a realizar una vez se conoce la fuente (usuario) del accidente cortopunzante?","categoria":"CLÍNICOS","codificacion":"RH 4.2"},
+      {"texto":"¿Para qué sirve la \"hoja DIAT\"?","categoria":"CLÍNICOS","codificacion":"RH 4.2"},
+      {"texto":"¿Cómo se realiza la notificación ante un Evento Adverso?","categoria":"CLÍNICOS","codificacion":"GCL 2.2"},
+      {"texto":"¿Quiénes pueden notificar Eventos Adversos? ¿Es voluntario?","categoria":"CLÍNICOS","codificacion":"GCL 2.2"},
+      {"texto":"¿Qué hacer en caso de que un usuario desee formular una solicitud ciudadana?","categoria":"CLÍNICOS","codificacion":"DP 1.2"},
+      {"texto":"¿Dónde están los formularios OIRS? Indicar el más cercano.","categoria":"CLÍNICOS","codificacion":"DP 1.2"},
+      {"texto":"¿Cuál es el tipo de ficha clínica que hay en el CESFAM?","categoria":"CLÍNICOS","codificacion":"REG 1.1"},
+      {"texto":"¿Cuál es el código único de identificación de los usuarios para las distintas partes de la ficha clínica?","categoria":"CLÍNICOS","codificacion":"REG 1.1"},
+      {"texto":"¿Cuáles son los “soportes” que conforman la ficha clínica? ¿Cómo accedo?","categoria":"CLÍNICOS","codificacion":"REG 1.1"},
+      {"texto":"¿Qué hacer si un usuario no tiene RUN?","categoria":"CLÍNICOS","codificacion":"REG 1.1"},
+      {"texto":"¿Cómo se solicita una ficha de papel?","categoria":"CLÍNICOS","codificacion":"REG 1.1"},
+
+      {"texto":"¿Cómo reconoce una situación de emergencia con riesgo vital?","categoria":"DENTAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 1)","categoria":"DENTAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hacer en caso de detectar una emergencia de riesgo vital? (funcionario 2)","categoria":"DENTAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Cuál es el equipo de respuesta?","categoria":"DENTAL","codificacion":"AOC 1.1"},
+      {"texto":"¿Qué hace si tiene un accidente relacionado con sangre o fluidos corporales?","categoria":"DENTAL","codificacion":"RH 4.2"},
+      {"texto":"¿Qué hacer en caso de tener un accidente cortopunzante?","categoria":"DENTAL","codificacion":"RH 4.2"},
+      {"texto":"¿Cuáles son los pasos a realizar una vez se conoce la fuente (usuario) del accidente cortopunzante?","categoria":"DENTAL","codificacion":"RH 4.2"},
+      {"texto":"¿Para qué sirve la \"hoja DIAT\"?","categoria":"DENTAL","codificacion":"RH 4.2"},
+      {"texto":"¿Cómo se realiza la notificación ante un Evento Adverso?","categoria":"DENTAL","codificacion":"GCL 2.2"},
+      {"texto":"¿Quiénes pueden notificar Eventos Adversos? ¿Es voluntario?","categoria":"DENTAL","codificacion":"GCL 2.2"},
+      {"texto":"¿Qué hacer en caso de que un usuario desee formular una solicitud ciudadana?","categoria":"DENTAL","codificacion":"DP 1.2"},
+      {"texto":"¿Dónde están los formularios OIRS? Indicar el más cercano.","categoria":"DENTAL","codificacion":"DP 1.2"},
+      {"texto":"¿Cuál es el tipo de ficha clínica que hay en el CESFAM?","categoria":"DENTAL","codificacion":"REG 1.1"},
+      {"texto":"¿Cuál es el código único de identificación de los usuarios para las distintas partes de la ficha clínica?","categoria":"DENTAL","codificacion":"REG 1.1"},
+      {"texto":"¿Cuáles son los “soportes” que conforman la ficha clínica? ¿Cómo accedo?","categoria":"DENTAL","codificacion":"REG 1.1"},
+      {"texto":"¿Qué hacer si un usuario no tiene RUN?","categoria":"DENTAL","codificacion":"REG 1.1"},
+      {"texto":"¿Cómo se solicita una ficha de papel?","categoria":"DENTAL","codificacion":"REG 1.1"},
+      {"texto":"¿Qué se hace con el material sucio de la unidad?","categoria":"DENTAL","codificacion":"APE 1.2"},
+      {"texto":"¿Cómo se realiza el lavado y preparación del material a esterilizar?","categoria":"DENTAL","codificacion":"APE 1.2"},
+      {"texto":"¿Dónde se lava el material luego de ser utilizado en un proceso dental?","categoria":"DENTAL","codificacion":"APE 1.2"}
+    ]
+  }</script>
+
+  <script>
+  (function(){
+    'use strict';
+
+    function $(sel, root){ return (root||document).querySelector(sel); }
+    function nowISO(){ return new Date().toISOString(); }
+    function formatDate(d){ var dt=new Date(d); var yyyy=dt.getFullYear(); var mm=('0'+(dt.getMonth()+1)).slice(-2); var dd=('0'+dt.getDate()).slice(-2); var hh=('0'+dt.getHours()).slice(-2); var mi=('0'+dt.getMinutes()).slice(-2); return dd+'-'+mm+'-'+yyyy+' '+hh+':'+mi; }
+    function escapeHTML(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function download(filename, content, mime){ var blob=new Blob([content],{type:mime}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); document.body.removeChild(a); },0); }
+
+    var App=(function(){
+      var Storage=(function(){
+        var PREFIX='ruleta_cesfam_v1_';
+        function get(k,f){ try{ var v=localStorage.getItem(PREFIX+k); return v==null?f:JSON.parse(v); }catch(e){ return f; } }
+        function set(k,val){ try{ localStorage.setItem(PREFIX+k, JSON.stringify(val)); }catch(e){} }
+        return {get:get,set:set};
+      })();
+
+      var State=(function(){
+        var embeddedBank; try{ embeddedBank=JSON.parse(document.getElementById('embedded-bank').textContent); }catch(e){ embeddedBank={categorias:['GENERAL','MÉDICOS(AS)','CLÍNICOS','DENTAL'], preguntas:[{texto:'Banco embebido inválido. Edítalo o importa un JSON válido (≥10).', categoria:'GENERAL', codificacion:'N/D'}]}; }
+        var bank=Storage.get('bank', embeddedBank);
+        var used=Storage.get('used', {});
+        var config=Storage.get('config', {allowRepeat:false, category:'Todas'});
+        var history=Storage.get('history', []);
+        var player=Storage.get('player', null);
+        var theme=Storage.get('theme','light');
+        var current=Storage.get('current', null);
+
+        function persist(){ Storage.set('bank',bank); Storage.set('used',used); Storage.set('config',config); Storage.set('history',history); Storage.set('player',player); Storage.set('theme',theme); Storage.set('current',current); }
+        function setTheme(t){ theme=t==='dark'?'dark':'light'; persist(); }
+        function getTheme(){ return theme; }
+        function normalizeBank(b){ if(!b||!Array.isArray(b.categorias)||!Array.isArray(b.preguntas)) return false; var cats=[]; b.categorias.forEach(function(c){ if(typeof c==='string'){ c=c.trim(); if(c&&cats.indexOf(c)===-1) cats.push(c); } }); var qs=[]; b.preguntas.forEach(function(p){ if(p&&typeof p.texto==='string'&&typeof p.categoria==='string'){ var t=p.texto.trim(); var c=p.categoria.trim(); var cod=(p.codificacion||'').toString().trim(); if(t.length>=10){ if(cats.indexOf(c)===-1) cats.push(c); qs.push({texto:t,categoria:c,codificacion:cod}); } } }); if(!cats.length||!qs.length) return false; return {categorias:cats, preguntas:qs}; }
+        function setBank(b){ bank=b; persist(); }
+        function getBank(){ return bank; }
+        function getConfig(){ return config; }
+        function setConfig(c){ config=c; persist(); }
+        function getUsed(){ return used; }
+        function setUsed(u){ used=u; persist(); }
+        function keyFor(q){ return q.categoria+'::'+q.texto; }
+        function getHistory(){ return history; }
+        function pushHistory(item){ history.unshift(item); persist(); }
+        function clearHistory(){ history=[]; persist(); }
+        function getPlayer(){ return player; }
+        function setPlayer(p){ player=p; persist(); }
+        function clearPlayer(){ player=null; persist(); }
+        function setCurrent(sel){ current=sel; persist(); }
+        function getCurrent(){ return current; }
+        function clearCurrent(){ current=null; persist(); }
+        return { embeddedBank:embeddedBank, normalizeBank:normalizeBank, setBank:setBank, getBank:getBank, getConfig:getConfig, setConfig:setConfig, getUsed:getUsed, setUsed:setUsed, keyFor:keyFor, getHistory:getHistory, pushHistory:pushHistory, clearHistory:clearHistory, getPlayer:getPlayer, setPlayer:setPlayer, clearPlayer:clearPlayer, setTheme:setTheme, getTheme:getTheme, setCurrent:setCurrent, getCurrent:getCurrent, clearCurrent:clearCurrent, persist:persist };
+      })();
+
+      var Bank=(function(){
+        function availableQuestions(){ var bank=State.getBank(); var cfg=State.getConfig(); var used=State.getUsed(); var allowRepeat=!!cfg.allowRepeat; var cat=cfg.category||'Todas'; var arr=bank.preguntas.filter(function(q){ return cat==='Todas'?true:q.categoria===cat; }); if(!allowRepeat){ arr=arr.filter(function(q){ return !used[State.keyFor(q)]; }); } return arr; }
+        function allFilteredQuestions(){ var bank=State.getBank(); var cfg=State.getConfig(); var cat=cfg.category||'Todas'; return bank.preguntas.filter(function(q){ return cat==='Todas'?true:q.categoria===cat; }); }
+        function addQuestion(texto, categoria, codificacion){ var bank=State.getBank(); bank.preguntas.push({texto:texto,categoria:categoria,codificacion:codificacion||''}); if(bank.categorias.indexOf(categoria)===-1) bank.categorias.push(categoria); State.setBank(bank); }
+        function mergeBank(newBank){ var bank=State.getBank(); newBank.categorias.forEach(function(c){ if(bank.categorias.indexOf(c)===-1) bank.categorias.push(c); }); var exists={}; bank.preguntas.forEach(function(q){ exists[State.keyFor(q)]=true; }); newBank.preguntas.forEach(function(q){ var key=State.keyFor(q); if(!exists[key]) bank.preguntas.push({texto:q.texto,categoria:q.categoria,codificacion:(q.codificacion||'')}); }); State.setBank(bank); }
+        function replaceBank(newBank){ State.setBank(newBank); }
+        return { availableQuestions:availableQuestions, allFilteredQuestions:allFilteredQuestions, addQuestion:addQuestion, mergeBank:mergeBank, replaceBank:replaceBank };
+      })();
+
+      var Wheel=(function(){
+        var canvas, ctx, angle=0, spinning=false, animId=null; var colors=['#38bdf8','#10b981','#60a5fa','#22c55e','#a78bfa','#f59e0b'];
+        function init(){ canvas=document.getElementById('wheel'); ctx=canvas.getContext('2d'); draw(); window.addEventListener('resize', function(){ draw(); }); }
+        function draw(){ if(!ctx) return; var q=Bank.availableQuestions(); var n=Math.max(q.length,1); var w=canvas.width,h=canvas.height; ctx.clearRect(0,0,w,h); var cx=w/2, cy=h/2, r=Math.min(w,h)/2-10; ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle); var step=Math.PI*2/n; for(var i=0;i<n;i++){ ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r, i*step, (i+1)*step); ctx.closePath(); ctx.fillStyle=colors[i%colors.length]; ctx.globalAlpha=0.9; ctx.fill(); ctx.globalAlpha=1; ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,r, i*step, (i+1)*step); ctx.stroke(); } ctx.beginPath(); ctx.arc(0,0,40,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.restore(); }
+        function easeOutCubic(t){ return 1-Math.pow(1-t,3); }
+        function spin(cb){ if(spinning) return; var q=Bank.availableQuestions(); var full=Bank.allFilteredQuestions(); if(q.length===0){ var cfg=State.getConfig(); var scope=cfg.category==='Todas'?'todas las categorías':('la categoría "'+cfg.category+'"'); var ok=confirm('No quedan preguntas disponibles en '+scope+'.\n\n¿Deseas reiniciar el ciclo (limpiar preguntas usadas en este ámbito)?'); if(ok){ var used=State.getUsed(); full.forEach(function(qq){ var k=State.keyFor(qq); if(used[k]) delete used[k]; }); State.setUsed(used); draw(); alert('Listo. Se reiniciaron las preguntas usadas para '+scope+'.'); } return; } var n=q.length; var targetIndex=Math.floor(Math.random()*n); var segment=(Math.PI*2)/n; var targetAngle=(Math.PI*2)-(targetIndex*segment+segment/2); var extraTurns=5+Math.floor(Math.random()*4); var finalAngle=targetAngle+extraTurns*Math.PI*2; var duration=3000+Math.floor(Math.random()*1000); var start=performance.now(); var startAngle=angle; spinning=true; function frame(t){ var elapsed=t-start; var p=Math.min(1, elapsed/duration); var eased=easeOutCubic(p); angle=startAngle+(finalAngle-startAngle)*eased; draw(); if(p<1){ animId=requestAnimationFrame(frame); } else { spinning=false; if(typeof cb==='function') cb(q[targetIndex]); } } animId=requestAnimationFrame(frame); }
+        function isSpinning(){ return spinning; }
+        return { init:init, draw:draw, spin:spin, isSpinning:isSpinning };
+      })();
+
+      var Export=(function(){
+        function toCSV(rows){ var bom='\ufeff'; var header=['Fecha/Hora','Categoría','Codificación','Pregunta','Nombre','Estamento','Sector','Resultado']; function esc(v){ var s=String(v==null?'':v).replace(/"/g,'""'); if(/[";,\n]/.test(s)) s='"'+s+'"'; return s; } var lines=[header.map(esc).join(';')]; rows.forEach(function(r){ lines.push([r.fecha,r.categoria,r.codificacion||'',r.pregunta,r.nombre,r.estamento,r.sector,r.resultado].map(esc).join(';')); }); return bom+lines.join('\n'); }
+        function toTXT(rows){ var lines=[]; rows.forEach(function(r){ lines.push('- '+r.fecha+' | '+r.categoria+' | '+(r.codificacion||'')+' | '+r.pregunta+' | '+r.nombre+' | '+r.estamento+' | '+r.sector+' | '+r.resultado); }); return lines.join('\n'); }
+        return { toCSV:toCSV, toTXT:toTXT };
+      })();
+
+      var UI=(function(){
+        var els={};
+        function cache(){
+          els.spin=$('#btnSpin');
+          els.resultText=$('#resultText');
+          els.resultStatus=$('#resultStatus');
+          els.activeCategory=$('#activeCategory');
+          els.historyBody=$('#historyBody');
+          els.playerInfo=$('#playerInfo');
+          els.playerForm=$('#playerForm');
+          els.btnNewPlayer=$('#btnNewPlayer');
+          els.btnEndPlayer=$('#btnEndPlayer');
+          els.btnMarkCorrect=$('#btnMarkCorrect');
+          els.btnMarkIncorrect=$('#btnMarkIncorrect');
+
+          els.drawer=$('#drawer');
+          els.btnConfig=$('#btnConfig');
+          els.btnCloseDrawer=$('#btnCloseDrawer');
+          els.selCategoria=$('#selCategoria');
+          els.selCategoriaNueva=$('#selCategoriaNueva');
+          els.inpCodificacionNueva=$('#inpCodificacionNueva');
+          els.btnNoRepeat=$('#btnNoRepeat');
+          els.btnAllowRepeat=$('#btnAllowRepeat');
+          els.btnLight=$('#btnLight');
+          els.btnDark=$('#btnDark');
+          els.txtNuevaPregunta=$('#txtNuevaPregunta');
+          els.btnAgregarPregunta=$('#btnAgregarPregunta');
+          els.btnImport=$('#btnImport');
+          els.fileImport=$('#fileImport');
+          els.selImportMode=$('#selImportMode');
+          els.btnExportCSV=$('#btnExportCSV');
+          els.btnExportTXT=$('#btnExportTXT');
+          els.btnReset=$('#btnReset');
+          els.themeCanvas=$('#confetti');
+        }
+        function renderCategories(){ var bank=State.getBank(); var cfg=State.getConfig(); var opts=['<option value="Todas">Todas</option>']; bank.categorias.forEach(function(c){ opts.push('<option value="'+escapeHTML(c)+'">'+escapeHTML(c)+'</option>'); }); els.selCategoria.innerHTML=opts.join(''); els.selCategoria.value=cfg.category||'Todas'; var opts2=[]; bank.categorias.forEach(function(c){ opts2.push('<option value="'+escapeHTML(c)+'">'+escapeHTML(c)+'</option>'); }); els.selCategoriaNueva.innerHTML=opts2.join(''); }
+        function updateRepeatButtons(){ var cfg=State.getConfig(); els.btnNoRepeat.setAttribute('aria-pressed', String(!cfg.allowRepeat)); els.btnAllowRepeat.setAttribute('aria-pressed', String(!!cfg.allowRepeat)); els.btnNoRepeat.classList.toggle('accent', !cfg.allowRepeat); els.btnAllowRepeat.classList.toggle('accent', !!cfg.allowRepeat); }
+        function updateThemeButtons(){ var t=State.getTheme(); els.btnLight.setAttribute('aria-pressed', String(t==='light')); els.btnDark.setAttribute('aria-pressed', String(t==='dark')); els.btnLight.classList.toggle('accent', t==='light'); els.btnDark.classList.toggle('accent', t==='dark'); document.documentElement.setAttribute('data-theme', t); }
+        function setDrawer(open){ if(open){ els.drawer.classList.add('open'); els.btnConfig.setAttribute('aria-expanded','true'); els.drawer.focus(); } else { els.drawer.classList.remove('open'); els.btnConfig.setAttribute('aria-expanded','false'); els.btnConfig.focus(); } }
+        function renderPlayer(){ var p=State.getPlayer(); if(!p){ els.playerInfo.textContent='Ninguno'; els.btnEndPlayer.disabled=true; els.spin.disabled=true; els.btnMarkCorrect.disabled=true; els.btnMarkIncorrect.disabled=true; } else { els.playerInfo.textContent=p.nombre+' — '+p.estamento+' — '+p.sector; els.btnEndPlayer.disabled=false; els.spin.disabled=false; updateMarkButtons(); } }
+        function renderHistory(){ var rows=State.getHistory(); var html=[]; rows.forEach(function(r){ html.push('<tr>'+'<td>'+escapeHTML(r.fecha)+'</td>'+'<td>'+escapeHTML(r.categoria)+'</td>'+'<td>'+escapeHTML(r.codificacion||'')+'</td>'+'<td>'+escapeHTML(r.pregunta)+'</td>'+'<td>'+escapeHTML(r.nombre)+'</td>'+'<td>'+escapeHTML(r.estamento)+'</td>'+'<td>'+escapeHTML(r.sector)+'</td>'+'<td>'+escapeHTML(r.resultado||'')+'</td>'+'</tr>'); }); els.historyBody.innerHTML=html.join(''); }
+        function renderActiveCategory(){ var cfg=State.getConfig(); els.activeCategory.textContent='Categoría: '+(cfg.category||'Todas'); }
+        function updateMarkButtons(){ var enable=!!State.getCurrent() && !!State.getPlayer(); els.btnMarkCorrect.disabled=!enable; els.btnMarkIncorrect.disabled=!enable; }
+        function renderAll(){ renderCategories(); updateRepeatButtons(); updateThemeButtons(); renderPlayer(); renderHistory(); renderActiveCategory(); Wheel.draw(); updateMarkButtons(); }
+        function celebrate(){ var canvas=els.themeCanvas, ctx=canvas.getContext('2d'); function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; } resize(); var parts=[]; var colors=['#38bdf8','#10b981','#60a5fa','#22c55e','#f59e0b']; for(var i=0;i<80;i++){ parts.push({x:Math.random()*canvas.width,y:-10-Math.random()*80,vx:(Math.random()-0.5)*2,vy:2+Math.random()*3,size:4+Math.random()*4,rot:Math.random()*Math.PI,vr:(Math.random()-0.5)*0.2,color:colors[i%colors.length]}); } var start=performance.now(); canvas.classList.add('show'); var raf; function frame(t){ var elapsed=t-start; ctx.clearRect(0,0,canvas.width,canvas.height); parts.forEach(function(p){ p.vy+=0.02; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); ctx.restore(); }); if(elapsed<1500){ raf=requestAnimationFrame(frame); } else { canvas.classList.remove('show'); cancelAnimationFrame(raf); } } raf=requestAnimationFrame(frame); }
+        function bind(){
+          els.spin.addEventListener('click', function(){ if(Wheel.isSpinning()) return; if(!State.getPlayer()){ alert('Crea un jugador antes de girar.'); return; } Wheel.spin(function(chosen){ var cfg=State.getConfig(); if(!cfg.allowRepeat){ var used=State.getUsed(); used[State.keyFor(chosen)]=true; State.setUsed(used); } State.setCurrent({ texto: chosen.texto, categoria: chosen.categoria, codificacion: chosen.codificacion || '' }); els.resultText.textContent=chosen.texto; els.resultStatus.textContent='Pendiente de calificación'; renderHistory(); Wheel.draw(); celebrate(); updateMarkButtons(); }); });
+          els.spin.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); els.spin.click(); } });
+
+          els.btnMarkCorrect.addEventListener('click', function(){ saveAnswer('Correcta'); });
+          els.btnMarkIncorrect.addEventListener('click', function(){ saveAnswer('Incorrecta'); });
+          els.btnMarkCorrect.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); saveAnswer('Correcta'); }});
+          els.btnMarkIncorrect.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); saveAnswer('Incorrecta'); }});
+          function saveAnswer(res){ var cur=State.getCurrent(); if(!cur){ alert('No hay selección pendiente.'); return; } var p=State.getPlayer(); if(!p){ alert('Crea un jugador antes de registrar.'); return; } var item={ fecha:formatDate(nowISO()), categoria:cur.categoria, codificacion:(cur.codificacion||''), pregunta:cur.texto, nombre:p.nombre, estamento:p.estamento, sector:p.sector, resultado:res }; State.pushHistory(item); renderHistory(); State.clearCurrent(); els.resultStatus.textContent='Registrada como '+res+'.'; updateMarkButtons(); }
+
+          els.btnConfig.addEventListener('click', function(){ setDrawer(true); });
+          els.btnCloseDrawer.addEventListener('click', function(){ setDrawer(false); });
+          els.drawer.addEventListener('keydown', function(e){ if(e.key==='Escape') setDrawer(false); });
+
+          els.selCategoria.addEventListener('change', function(){ var cfg=State.getConfig(); cfg.category=els.selCategoria.value; State.setConfig(cfg); renderActiveCategory(); Wheel.draw(); });
+
+          els.btnNoRepeat.addEventListener('click', function(){ var cfg=State.getConfig(); cfg.allowRepeat=false; State.setConfig(cfg); updateRepeatButtons(); Wheel.draw(); });
+          els.btnAllowRepeat.addEventListener('click', function(){ var cfg=State.getConfig(); cfg.allowRepeat=true; State.setConfig(cfg); updateRepeatButtons(); Wheel.draw(); });
+
+          els.btnLight.addEventListener('click', function(){ State.setTheme('light'); updateThemeButtons(); });
+          els.btnDark.addEventListener('click', function(){ State.setTheme('dark'); updateThemeButtons(); });
+
+          els.btnAgregarPregunta.addEventListener('click', function(){ var txt=(els.txtNuevaPregunta.value||'').trim(); var cat=els.selCategoriaNueva.value; var cod=(els.inpCodificacionNueva.value||'').trim(); if(txt.length<10){ alert('La pregunta debe tener al menos 10 caracteres.'); return; } if(!cod){ if(!confirm('No ingresaste codificación. ¿Deseas continuar sin codificación?')) return; } Bank.addQuestion(txt, cat, cod); els.txtNuevaPregunta.value=''; els.inpCodificacionNueva.value=''; renderCategories(); Wheel.draw(); alert('Pregunta agregada.'); });
+
+          els.btnImport.addEventListener('click', function(){ els.fileImport.click(); });
+          els.fileImport.addEventListener('change', function(){ var f=els.fileImport.files[0]; if(!f) return; var reader=new FileReader(); reader.onerror=function(){ alert('No se pudo leer el archivo.'); }; reader.onload=function(){ try{ var obj=JSON.parse(String(reader.result)); var norm=State.normalizeBank(obj); if(!norm){ alert('JSON inválido. Verifica la estructura y que haya preguntas válidas (≥10 caracteres).'); return; } var mode=els.selImportMode.value; if(mode==='replace'){ Bank.replaceBank(norm); State.setUsed({}); } else { Bank.mergeBank(norm); } renderCategories(); Wheel.draw(); alert('Importación exitosa.'); }catch(e){ alert('Error al procesar el JSON: '+e.message); } els.fileImport.value=''; }; reader.readAsText(f); });
+
+          els.btnExportCSV.addEventListener('click', function(){ var rows=State.getHistory(); var csv=Export.toCSV(rows); download('historial_ruleta.csv', csv, 'text/csv;charset=utf-8'); });
+          els.btnExportTXT.addEventListener('click', function(){ var rows=State.getHistory(); var txt=Export.toTXT(rows); download('historial_ruleta.txt', txt, 'text/plain;charset=utf-8'); });
+
+          els.btnReset.addEventListener('click', function(){ var c1=confirm('¿Seguro que deseas borrar TODA la información guardada (banco personalizado, usadas, historial, configuración, jugador, selección y tema)?'); if(!c1) return; var c2=confirm('Confirmación final: esta acción no se puede deshacer.'); if(!c2) return; var embedded=State.embeddedBank; State.setBank(embedded); State.setUsed({}); State.clearHistory(); State.clearPlayer(); State.setConfig({allowRepeat:false, category:'Todas'}); State.setTheme('light'); State.clearCurrent(); renderAll(); alert('Se ha realizado el reset completo.'); });
+
+          els.btnNewPlayer.addEventListener('click', function(){ $('#inpNombre').focus(); });
+          els.playerForm.addEventListener('submit', function(e){ e.preventDefault(); var nombre=($('#inpNombre').value||'').trim(); var estamento=($('#inpEstamento').value||'').trim(); var sector=($('#inpSector').value||'').trim(); if(!nombre||!estamento||!sector){ alert('Completa todos los campos del jugador.'); return; } State.setPlayer({nombre:nombre, estamento:estamento, sector:sector, inicio:nowISO()}); $('#inpNombre').value=''; $('#inpEstamento').value=''; $('#inpSector').value=''; renderPlayer(); alert('Jugador creado. Ya puedes girar.'); });
+          els.btnEndPlayer.addEventListener('click', function(){ var ok=confirm('¿Finalizar el jugador activo?'); if(!ok) return; State.clearPlayer(); renderPlayer(); });
+
+          window.addEventListener('resize', function(){ var c=els.themeCanvas; c.width=window.innerWidth; c.height=window.innerHeight; });
+        }
+        return { cache:cache, renderAll:renderAll, bind:bind, celebrate:celebrate };
+      })();
+
+      var Config=(function(){ function initTheme(){ document.documentElement.setAttribute('data-theme', State.getTheme()); } return { initTheme:initTheme }; })();
+
+      function init(){ UI.cache(); Config.initTheme(); Wheel.init(); UI.renderAll(); UI.bind(); }
+      return { init:init };
+    })();
+
+    document.addEventListener('DOMContentLoaded', App.init);
+  })();
+  </script>
+</body>
+</html>
